@@ -4,7 +4,9 @@ import datetime
 from django.http import HttpResponse
 import json
 import time
+import os.path
 
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 log_types_list = {'info': 'INFO', 'debug': 'DEBUG', 'error': 'ERROR', 'warning': 'WARNING', 'other': 'OTHER',
                   'all': 'ALL'}
 
@@ -19,7 +21,7 @@ def nova_log_view(request):
     if (not check_is_valid_date(start_date_input) or not check_is_valid_date(end_date_input)) or \
             (not check_valid_date_from_and_date_to(start_date_input, end_date_input)):
         return HttpResponse(json.dumps({"result": "invalid input"}), status=404)
-    log_reader = readfile.ReadLog("/home/cong/test.log")
+    log_reader = readfile.ReadLog(PROJECT_ROOT+"/n-api.log")
     log_summary_result = log_reader.summary_log_counts(start_date_input, end_date_input)
     return HttpResponse(json.dumps(log_summary_result.__dict__, ), status=200)
 
@@ -33,7 +35,7 @@ def nova_log_count_per_day_view(request):
         return HttpResponse(json.dumps({'error': "invalid date value"}), status=404)
     if log_type not in log_types_list:
         return HttpResponse(json.dumps({'error': "invalid log_type value"}), status=404)
-    log_reader = readfile.ReadLog("/home/cong/test.log")
+    log_reader = readfile.ReadLog(PROJECT_ROOT+"/n-api.log")
     try:
         result_dict = log_reader.summary_log_per_day(log_types_list[log_type],
                                                      start_date_input, end_date_input)
@@ -117,7 +119,7 @@ def nova_log_count_with_period_and_log_type(request):
         period = get_period_value(request.GET.get("period"))
     except PeriodInputException:
         return HttpResponse(json.dumps({'error': "invalid period value"}), status=400)
-    log_reader = readfile.ReadLog("/home/cong/test.log")
+    log_reader = readfile.ReadLog(PROJECT_ROOT+"/n-api.log")
     result = log_reader.summary_log_with_period(date_to, log_type, period, period_counts=5)
     result_json_format = [{convert_datetime_to_result_string(elements.time): elements.number_of_logs} for elements in
                           result]
